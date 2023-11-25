@@ -1,7 +1,9 @@
 package com.api.rest.apirestencuestas.controller;
 
+import com.api.rest.apirestencuestas.exception.ResourceNotFoundException;
 import com.api.rest.apirestencuestas.model.Encuesta;
 import com.api.rest.apirestencuestas.repository.EncuestaRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,7 +26,7 @@ public class EncuestaController {
     }
 
     @PostMapping("/encuestas")
-    public ResponseEntity<?> crearEncuesta(@RequestBody Encuesta encuesta){
+    public ResponseEntity<?> crearEncuesta(@Valid @RequestBody Encuesta encuesta){
         encuesta = encuestaRepository.save(encuesta);
 
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -33,12 +35,15 @@ public class EncuestaController {
                 .path("/{id}")
                 .buildAndExpand(encuesta.getId()).toUri();
         httpHeaders.setLocation(newEncuestaURI);
-        return new ResponseEntity<>(null,HttpStatus.CREATED);
+        return new ResponseEntity<>(null,httpHeaders,HttpStatus.CREATED);
 
     }
 
     @GetMapping("/encuesta/{encuestaId}")
     public ResponseEntity<?> obtenerEncuestas(@RequestBody Long encuestaId){
+
+        verifyEncuesta(encuestaId);
+
         Optional<Encuesta> encuesta = encuestaRepository.findById(encuestaId);
 
         if(encuesta.isPresent()){
@@ -51,16 +56,26 @@ public class EncuestaController {
 
     @PutMapping("/encuesta/{encuestaId}")
     public ResponseEntity<?> actulizarEncuesta(@RequestBody Encuesta encuesta,@PathVariable Long encuestaId){
+        verifyEncuesta(encuestaId);
         encuesta.setId(encuestaId);
-        Encuesta e = encuestaRepository.save(encuesta);
-        return new ResponseEntity<>(e,HttpStatus.OK);
+        encuestaRepository.save(encuesta);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 
     @DeleteMapping("/encuestas/{encuestaId}")
     public ResponseEntity<?> eliminarEncuesta(@PathVariable Long encuestaId){
+        verifyEncuesta(encuestaId);
         encuestaRepository.deleteById(encuestaId);
         return new ResponseEntity<>("Se ha eliminado la cuenta",HttpStatus.OK);
     }
 
+    protected void verifyEncuesta(Long encuestaId){
+
+        Optional<Encuesta> encuesta = encuestaRepository.findById(encuestaId);
+
+        if(!encuesta.isPresent()){
+            throw new ResourceNotFoundException("Encuesta con el ID: "+encuestaId+"no encontrada");
+        }
+    }
 }

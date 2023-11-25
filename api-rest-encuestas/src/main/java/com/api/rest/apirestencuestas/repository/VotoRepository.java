@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface VotoRepository extends CrudRepository<Voto,Long> {
 
-    @Query(value = "select v.* from Opcion o, Voto v where o.ENCUESTA_ID=?1 and v.OPCIONE_ID=o.OPCION.ID",nativeQuery = true)
+    @Query(value = "select v.* from Opcion o, Voto v where o.ENCUESTA_ID=?1 and v.OPCION_ID=o.OPCION_ID",nativeQuery = true)
     public Iterable<Voto> findByEncuesta(Long encuestaId);
 }
